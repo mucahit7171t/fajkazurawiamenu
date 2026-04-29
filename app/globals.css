@@ -24,3 +24,31 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+::selection {
+  background: #c8a24a;
+  color: black;
+}
+button {
+  outline: none;
+}
+
+button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #c8a24a55;
+}
+select {
+  background-color: #111111 !important;
+  color: #ffffff !important;
+  border-color: rgba(200, 162, 74, 0.45) !important;
+}
+
+select option {
+  background-color: #111111 !important;
+  color: #ffffff !important;
+}
+
+select option:hover,
+select option:checked {
+  background-color: #c8a24a !important;
+  color: #000000 !important;
+}

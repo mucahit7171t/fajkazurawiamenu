@@ -1,65 +1,320 @@
+"use client";
+
 import Image from "next/image";
+import { useEffect, useState } from "react";
+
+type MenuItem = {
+  name: string;
+  description: string;
+  price: string;
+  badge?: "Best Seller" | "Premium" | "New";
+  image?: string;
+};
+
+type Category = {
+  id: string;
+  title: string;
+  imageLabel: string;
+  items: MenuItem[];
+};
 
 export default function Home() {
+  const [showSplash, setShowSplash] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+  async function loadMenu() {
+    try {
+      const res = await fetch("/api/menu", { cache: "no-store" });
+      const data = await res.json();
+
+      if (Array.isArray(data)) {
+        setCategories(data);
+      } else {
+        console.error("MENU DATA IS NOT ARRAY:", data);
+        setCategories([]);
+      }
+    } catch (error) {
+      console.error("MENU LOAD ERROR:", error);
+      setCategories([]);
+    }
+  }
+
+  loadMenu();
+}, []);
+
+  const defaultProductImage = "/product-default.jpg";
+  const logoPath = "/logo.png";
+
+  const openingHours = [
+    { day: "Monday", label: "04:00 PM - 03:00 AM" },
+    { day: "Tuesday", label: "04:00 PM - 03:00 AM" },
+    { day: "Wednesday", label: "04:00 PM - 04:00 AM" },
+    { day: "Thursday", label: "04:00 PM - 04:00 AM" },
+    { day: "Friday", label: "02:00 PM - 05:00 AM" },
+    { day: "Saturday", label: "02:00 PM - 05:00 AM" },
+    { day: "Sunday", label: "03:00 PM - 04:00 AM" },
+  ];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
+    <main className="min-h-screen bg-[#5f6168] px-3 py-6 text-black">
+      <div id="top" className="mx-auto max-w-[430px] rounded-[28px] bg-[#ececec] p-3 shadow-2xl ring-1 ring-black/10">
+        <div
+          className="overflow-hidden rounded-[18px] border border-black/10"
+          style={{
+            background: "linear-gradient(135deg, #efefef 0%, #e8e8e8 35%, #f5f5f5 50%, #e2e2e2 100%)",
+          }}
+        >
+          <section className="px-4 pb-5 pt-7 text-center">
+            <div className="mb-4 flex items-center justify-center gap-3">
+              <span className="h-px w-16 bg-[#b89245]" />
+              <span className="text-[20px] text-[#b89245]">✦</span>
+              <span className="h-px w-16 bg-[#b89245]" />
+            </div>
+
+            <h1 className="text-[42px] leading-none text-black" style={{ fontFamily: "Georgia, serif" }}>
+              Fajka Bar
+            </h1>
+
+            <div className="mx-auto mt-5 h-px w-40 bg-[#b89245]" />
+
+            <div className="mx-auto mt-6 max-w-[350px] rounded-[22px] border border-[#b89245]/45 bg-white/45 px-4 py-5 shadow-sm">
+              <div className="mb-4 flex items-center justify-center gap-3">
+                <span className="h-px w-14 bg-[#b89245]" />
+                <span className="text-[18px] font-bold tracking-[0.32em] text-[#b89245]">
+                  UWAGA
+                </span>
+                <span className="h-px w-14 bg-[#b89245]" />
+              </div>
+
+              <div className="space-y-4 text-left">
+                <div className="flex gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#b89245]/50 text-[18px] text-[#b89245]">
+                    👥
+                  </div>
+                  <p className="text-[14px] leading-5 text-black/80" style={{ fontFamily: "Georgia, serif" }}>
+                    Powyżej 3 osób shisha jest sprzedawana <strong>tylko przy zakupie napojów</strong>.
+                  </p>
+                </div>
+
+                <div className="h-px bg-[#b89245]/35" />
+
+                <div className="flex gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#b89245]/50 text-[18px] text-[#b89245]">
+                    🥤
+                  </div>
+                  <p className="text-[14px] leading-5 text-black/80" style={{ fontFamily: "Georgia, serif" }}>
+                    Prosimy <strong>nie spożywać</strong> napojów i jedzenia przyniesionego z zewnątrz.
+                  </p>
+                </div>
+
+                <div className="h-px bg-[#b89245]/35" />
+
+                <div className="flex gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#b89245]/50 text-[18px] text-[#b89245]">
+                    🛋️
+                  </div>
+                  <p className="text-[14px] leading-5 text-black/80" style={{ fontFamily: "Georgia, serif" }}>
+                    Za uszkodzenia fajek wodnych, kanap i innych mebli spowodowane nieostrożnym zachowaniem
+                    <strong> odpowiadają nasi klienci</strong>.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="sticky top-0 z-20 border-y border-black/10 bg-[#ececec]/95 px-3 py-2 backdrop-blur">
+            <div className="flex gap-2 overflow-x-auto">
+              <a href="#top" className="whitespace-nowrap rounded-full bg-black px-3 py-2 text-[11px] font-bold text-white">
+                Main Menu
+              </a>
+              <a href="#classic-drinks" className="whitespace-nowrap rounded-full border border-black/15 bg-white px-3 py-2 text-[11px] font-bold text-black">
+                Drinks
+              </a>
+              <a href="#classic-shisha" className="whitespace-nowrap rounded-full border border-black/15 bg-white px-3 py-2 text-[11px] font-bold text-black">
+                Shisha
+              </a>
+              <a href="#contact" className="whitespace-nowrap rounded-full border border-black/15 bg-white px-3 py-2 text-[11px] font-bold text-black">
+                Contact
+              </a>
+            </div>
+          </section>
+
+          <section className="px-4 pb-6 pt-4">
+            <div className="grid grid-cols-2 gap-4">
+              {categories.map((category) => (
+                <a
+                  key={category.id}
+                  href={`#${category.id}`}
+                  className="group relative block aspect-square overflow-hidden rounded-[6px] border border-black/10 bg-black shadow-md"
+                >
+                  <Image
+                    src={defaultProductImage}
+                    alt={category.title}
+                    fill
+                    className="object-cover opacity-65 transition duration-300 group-hover:scale-105"
+                    sizes="(max-width: 430px) 50vw, 200px"
+                  />
+                  <div className="absolute inset-0 bg-black/35" />
+                  <div className="absolute inset-0 flex items-end justify-center p-3 text-center">
+                    <span
+                      className="text-[17px] font-bold uppercase leading-5 tracking-wide text-white drop-shadow-lg"
+                      style={{ fontFamily: "Georgia, serif" }}
+                    >
+                      {category.imageLabel}
+                    </span>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </section>
+
+          <section className="space-y-4 px-3 pb-6">
+            {categories.map((category) => (
+              <section key={category.id} id={category.id} className="rounded-[10px] bg-[#e7e7e7] px-2 py-3">
+                <div className="mb-3 flex items-center justify-between gap-3 px-2">
+                  <h2
+                    className="text-[40px] font-black leading-none text-black sm:text-[52px]"
+                    style={{ fontFamily: "Arial Black, Arial, sans-serif" }}
+                  >
+                    {category.title}
+                  </h2>
+
+                  <a
+                    href="#top"
+                    className="inline-flex shrink-0 items-center gap-1 rounded-full border border-black/15 bg-white px-3 py-1 text-[11px] font-semibold text-black/70 shadow-sm"
+                  >
+                    <span>↑</span>
+                    <span>Menu</span>
+                  </a>
+                </div>
+
+                <div className="space-y-2">
+                  {category.items.map((item, index) => (
+                    <div
+                      key={`${category.id}-${index}`}
+                      className="flex items-start gap-3 rounded-[10px] border border-black/10 bg-[#efefef] px-2 py-2 shadow-[0_1px_0_rgba(0,0,0,0.05)]"
+                    >
+                      <div className="relative h-[74px] w-[74px] shrink-0 overflow-hidden rounded-[10px] border border-black/15 bg-white">
+                        <Image
+                          src={item.image || defaultProductImage}
+                          alt={item.name}
+                          fill
+                          className="object-cover"
+                          sizes="74px"
+                        />
+                      </div>
+
+                      <div className="min-w-0 flex-1 pt-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-[18px] font-black leading-6 text-black" style={{ fontFamily: "Georgia, serif" }}>
+                            {item.name}
+                          </h3>
+
+                          {item.badge && (
+                            <span
+                              className={`rounded-full px-2 py-[2px] text-[10px] font-bold uppercase ${
+                                item.badge === "Premium"
+                                  ? "bg-amber-500 text-white"
+                                  : item.badge === "Best Seller"
+                                  ? "bg-green-600 text-white"
+                                  : "bg-sky-600 text-white"
+                              }`}
+                            >
+                              {item.badge}
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="mt-1 text-[11px] leading-4 text-black/60">{item.description}</p>
+                      </div>
+
+                      <div className="pt-1 text-right">
+                        <span className="text-[18px] font-bold text-[#ff6d6d]" style={{ fontFamily: "Georgia, serif" }}>
+                          {item.price}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </section>
+
+          <section className="px-4 pb-8 text-center">
+            <p className="mx-auto max-w-[290px] text-[14px] font-semibold leading-5" style={{ fontFamily: "Georgia, serif" }}>
+              W weekendy i święta do każdego rachunku doliczamy 10% opłaty serwisowej.
+            </p>
+
+            <a href="#top" className="mt-4 inline-flex items-center gap-2 underline" style={{ fontFamily: "Georgia, serif" }}>
+              <span className="text-[24px] leading-none">↑</span>
+              <span className="text-[22px] font-bold">Main Menu</span>
+            </a>
+
             <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              href="https://maps.google.com/?q=Żurawia+22+Warszawa"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-5 block overflow-hidden rounded-[10px] border border-black/10 bg-white shadow-sm"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              <div className="flex aspect-[4/3] items-center justify-center bg-[linear-gradient(135deg,#dfe7ef,#f8f8f8,#dcdcdc)] text-center text-[14px] font-semibold text-black/60">
+                Tap for map & directions
+              </div>
+            </a>
+
+            <div className="mt-7">
+              <h3 className="mb-4 text-[20px] font-bold" style={{ fontFamily: "Georgia, serif" }}>
+                Opening Hours
+              </h3>
+
+              <div className="space-y-2">
+                {openingHours.map((item) => (
+                  <div key={item.day} className="flex items-center justify-between rounded-[12px] border border-black/10 bg-white/80 px-4 py-3 shadow-sm">
+                    <span className="text-[17px] font-bold text-black" style={{ fontFamily: "Georgia, serif" }}>
+                      {item.day}
+                    </span>
+
+                    <span className="rounded-full bg-black px-3 py-1 text-[12px] font-semibold text-white">{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div id="contact" className="mt-8 space-y-1 text-[16px] font-bold leading-8" style={{ fontFamily: "Georgia, serif" }}>
+              <p className="text-[18px]">Get in Touch!</p>
+              <p>Fajka Bar</p>
+              <p>Żurawia 22, 00-515</p>
+              <p>Warszawa</p>
+            </div>
+
+            <div className="mt-6 flex flex-col items-center gap-3">
+              <a href="tel:+48000000000" className="inline-flex items-center gap-3 rounded-full border border-black/15 bg-white px-5 py-3 text-[15px] font-bold shadow-sm">
+                <span>📞</span>
+                <span>Call Us</span>
+              </a>
+
+              <a href="https://instagram.com" target="_blank" rel="noreferrer" className="inline-flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-gradient-to-br from-yellow-400 via-pink-500 to-purple-600 text-xl text-white shadow-sm">
+                  ◎
+                </div>
+                <span className="text-[20px] font-bold underline" style={{ fontFamily: "Georgia, serif" }}>
+                  Fajka bar
+                </span>
+              </a>
+
+              <a
+                href="https://maps.google.com/?q=Żurawia+22+Warszawa"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-3 rounded-full border border-black/15 bg-black px-5 py-3 text-[15px] font-bold text-white shadow-sm"
+              >
+                <span>📍</span>
+                <span>Get Directions</span>
+              </a>
+            </div>
+          </section>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }
