@@ -13,6 +13,14 @@ const defaultCategories = [
   { id: "hot-drinks", title: "Hot Drinks", imageLabel: "HOT DRINKS", image: "/product-default.jpg", order: 6 },
 ];
 
+function normalizeId(value: any) {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (value._id) return String(value._id);
+  if (value.id) return String(value.id);
+  return String(value);
+}
+
 export async function GET() {
   try {
     await connectDB();
@@ -25,6 +33,7 @@ export async function GET() {
 
     const dbCategoryList = dbCategories.map((cat) => ({
       id: cat.anchorId || String(cat._id),
+      mongoId: String(cat._id),
       title: cat.title?.en || cat.title?.pl || "",
       imageLabel: (cat.title?.en || cat.title?.pl || "").toUpperCase(),
       image: cat.image || "/product-default.jpg",
@@ -32,9 +41,12 @@ export async function GET() {
     }));
 
     const mergedCategories = [
-      ...defaultCategories,
+      ...defaultCategories.map((cat) => ({ ...cat, mongoId: cat.id })),
       ...dbCategoryList.filter(
-        (dbCat) => !defaultCategories.some((def) => def.id === dbCat.id)
+        (dbCat) =>
+          !defaultCategories.some(
+            (def) => def.id === dbCat.id || def.id === dbCat.mongoId
+          )
       ),
     ].sort((a, b) => a.order - b.order);
 
@@ -45,8 +57,14 @@ export async function GET() {
       image: category.image,
       items: products
         .filter((product) => {
-          const productCategory = product.categoryId || product.category || "snacks";
-          return productCategory === category.id;
+          const productCategory = normalizeId(
+            product.categoryId || product.category || product.category?._id
+          );
+
+          return (
+            productCategory === category.id ||
+            productCategory === category.mongoId
+          );
         })
         .map((product) => ({
           name: product.name?.en || product.name?.pl || "",
