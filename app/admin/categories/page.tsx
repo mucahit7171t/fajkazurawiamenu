@@ -32,7 +32,7 @@ export default function CategoriesPage() {
   }>({ type: null, mode: null, data: null });
 
   useEffect(() => {
-    fetchMenu();
+    fetchMenu(true);
   }, [fetchMenu]);
 
   const handleSave = async (data: any) => {

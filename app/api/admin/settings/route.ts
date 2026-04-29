@@ -8,6 +8,7 @@ const defaultSettings = {
   currency: "zł",
   language: "pl",
   isOpen: true,
+  phone: "+48 000 000 000",
   notices: [
     {
       icon: "👥",
@@ -30,37 +31,18 @@ const defaultSettings = {
   ],
 };
 
-export async function GET() {
-  try {
-    await connectDB();
-
-    let settings = await Settings.findOne({ key: "site-settings" });
-
-    if (!settings) {
-      settings = await Settings.create({
-        key: "site-settings",
-        value: defaultSettings,
-      });
-    }
-
-    return NextResponse.json(settings.value);
-  } catch (error) {
-    console.error("GET SETTINGS ERROR:", error);
-    return NextResponse.json(defaultSettings);
-  }
-}
-
 export async function PUT(req: Request) {
   try {
     await connectDB();
 
     const body = await req.json();
+    const { key, value } = body;
 
     const current = await Settings.findOne({ key: "site-settings" });
 
     const updatedValue = {
       ...(current?.value || defaultSettings),
-      ...body,
+      [key]: value,
     };
 
     const settings = await Settings.findOneAndUpdate(
@@ -74,7 +56,7 @@ export async function PUT(req: Request) {
       settings: settings.value,
     });
   } catch (error) {
-    console.error("UPDATE SETTINGS ERROR:", error);
+    console.error("ADMIN SETTINGS UPDATE ERROR:", error);
     return NextResponse.json(
       { success: false, error: "Settings update failed" },
       { status: 500 }

@@ -1,55 +1,61 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Product from "@/lib/models/Product";
+import Category from "@/lib/models/Category";
 
-const categoryInfo: Record<string, { title: string; imageLabel: string }> = {
-  snacks: { title: "Snacks", imageLabel: "SNACKS" },
-  "classic-shisha": { title: "Classic Shisha", imageLabel: "CLASSIC SHISHA" },
-  "shisha-alcohol": { title: "Shisha With Alcohol", imageLabel: "SHISHA WITH ALCOHOL" },
-  "premium-shisha": { title: "Premium Shisha", imageLabel: "PREMIUM SHISHA" },
-  "classic-drinks": { title: "Klasyczne Drinki", imageLabel: "KLASYCZNE DRINKI" },
-  bottles: { title: "Butelki", imageLabel: "BUTELKI" },
-  "hot-drinks": { title: "Hot Drinks", imageLabel: "HOT DRINKS" },
-};
+const defaultCategories = [
+  { id: "snacks", title: "Snacks", imageLabel: "SNACKS", image: "/product-default.jpg", order: 0 },
+  { id: "classic-shisha", title: "Classic Shisha", imageLabel: "CLASSIC SHISHA", image: "/product-default.jpg", order: 1 },
+  { id: "shisha-alcohol", title: "Shisha With Alcohol", imageLabel: "SHISHA WITH ALCOHOL", image: "/product-default.jpg", order: 2 },
+  { id: "premium-shisha", title: "Premium Shisha", imageLabel: "PREMIUM SHISHA", image: "/product-default.jpg", order: 3 },
+  { id: "classic-drinks", title: "Klasyczne Drinki", imageLabel: "KLASYCZNE DRINKI", image: "/product-default.jpg", order: 4 },
+  { id: "bottles", title: "Butelki", imageLabel: "BUTELKI", image: "/product-default.jpg", order: 5 },
+  { id: "hot-drinks", title: "Hot Drinks", imageLabel: "HOT DRINKS", image: "/product-default.jpg", order: 6 },
+];
 
 export async function GET() {
   try {
     await connectDB();
 
+    const dbCategories = await Category.find().sort({ order: 1, createdAt: 1 });
     const products = await Product.find({ isActive: true }).sort({
       order: 1,
       createdAt: -1,
     });
 
-    const grouped: Record<string, any[]> = {};
+    const dbCategoryList = dbCategories.map((cat) => ({
+      id: cat.anchorId || String(cat._id),
+      title: cat.title?.en || cat.title?.pl || "",
+      imageLabel: (cat.title?.en || cat.title?.pl || "").toUpperCase(),
+      image: cat.image || "/product-default.jpg",
+      order: cat.order || 0,
+    }));
 
-    products.forEach((product) => {
-      const categoryId = product.categoryId || product.category || "snacks";
+    const mergedCategories = [
+      ...defaultCategories,
+      ...dbCategoryList.filter(
+        (dbCat) => !defaultCategories.some((def) => def.id === dbCat.id)
+      ),
+    ].sort((a, b) => a.order - b.order);
 
-      if (!grouped[categoryId]) grouped[categoryId] = [];
-
-      grouped[categoryId].push({
-        name: product.name?.en || product.name?.pl || "",
-        description: product.desc?.en || product.desc?.pl || "",
-        price: product.price || "",
-        badge: product.badge || undefined,
-        image: product.image || "",
-      });
-    });
-
-    const categories = Object.keys(grouped).map((categoryId) => {
-      const info = categoryInfo[categoryId] || {
-        title: categoryId,
-        imageLabel: categoryId.toUpperCase(),
-      };
-
-      return {
-        id: categoryId,
-        title: info.title,
-        imageLabel: info.imageLabel,
-        items: grouped[categoryId],
-      };
-    });
+    const categories = mergedCategories.map((category) => ({
+      id: category.id,
+      title: category.title,
+      imageLabel: category.imageLabel,
+      image: category.image,
+      items: products
+        .filter((product) => {
+          const productCategory = product.categoryId || product.category || "snacks";
+          return productCategory === category.id;
+        })
+        .map((product) => ({
+          name: product.name?.en || product.name?.pl || "",
+          description: product.desc?.en || product.desc?.pl || "",
+          price: product.price || "",
+          badge: product.badge || undefined,
+          image: product.image || "",
+        })),
+    }));
 
     return NextResponse.json(categories);
   } catch (error) {

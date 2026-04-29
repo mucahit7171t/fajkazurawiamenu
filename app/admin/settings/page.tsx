@@ -2,13 +2,22 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Save, Loader2, Phone, Globe } from "lucide-react";
+import { Save, Loader2, Phone, Globe, Plus, Trash2 } from "lucide-react";
 import { useSettingsStore } from "@/store/settingsStore";
 import toast from "react-hot-toast";
 
+type Notice = {
+  icon: string;
+  text: string;
+  order: number;
+  isActive: boolean;
+};
+
 export default function SettingsPage() {
   const { settings, loading, fetchSettings, updateSetting } = useSettingsStore();
+
   const [phone, setPhone] = useState("");
+  const [notices, setNotices] = useState<Notice[]>([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -16,17 +25,65 @@ export default function SettingsPage() {
   }, [fetchSettings]);
 
   useEffect(() => {
-    if (settings.phone) {
-      setPhone(settings.phone);
+    setPhone(settings.phone || "+48 000 000 000");
+
+    if (Array.isArray(settings.notices)) {
+      setNotices(
+        settings.notices
+          .map((item: Notice, index: number) => ({
+            icon: item.icon || "ℹ️",
+            text: item.text || "",
+            order: item.order ?? index,
+            isActive: item.isActive !== false,
+          }))
+          .sort((a: Notice, b: Notice) => a.order - b.order)
+      );
     }
   }, [settings]);
+
+  const addNotice = () => {
+    setNotices([
+      ...notices,
+      {
+        icon: "ℹ️",
+        text: "",
+        order: notices.length,
+        isActive: true,
+      },
+    ]);
+  };
+
+  const updateNotice = (index: number, field: keyof Notice, value: any) => {
+    const updated = [...notices];
+    updated[index] = {
+      ...updated[index],
+      [field]: value,
+    };
+    setNotices(updated);
+  };
+
+  const removeNotice = (index: number) => {
+    const updated = notices
+      .filter((_, i) => i !== index)
+      .map((item, order) => ({ ...item, order }));
+    setNotices(updated);
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+
     const loadingToast = toast.loading("Updating settings...");
+
     try {
+      const normalizedNotices = notices.map((item, index) => ({
+        ...item,
+        order: index,
+      }));
+
       await updateSetting("phone", phone);
+      await updateSetting("notices", normalizedNotices);
+
       toast.success("Settings updated successfully", { id: loadingToast });
     } catch (error) {
       console.error(error);
@@ -71,25 +128,96 @@ export default function SettingsPage() {
                     Booking Phone Number
                   </h3>
                   <p className="text-[10px] text-white/20 uppercase font-black tracking-widest mt-0.5">
-                    Displayed in the client sidebar
+                    Displayed in the client menu
                   </p>
                 </div>
               </div>
 
-              <div className="relative group">
-                <input
-                  type="text"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+48 000 000 000"
-                  className="w-full bg-white/5 border border-white/5 rounded-2xl py-6 px-8 text-lg font-serif italic text-white focus:border-[#c8a24a] focus:bg-white/1 focus:ring-4 focus:ring-primary/5 transition-all outline-none"
-                  required
-                />
-                <div className="absolute top-1/2 right-6 -translate-y-1/2 opacity-0 group-focus-within:opacity-100 transition-opacity">
-                  <span className="text-[10px] text-[#c8a24a] font-black uppercase tracking-widest">
-                    Editing Mode
-                  </span>
+              <input
+                type="text"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+48 000 000 000"
+                className="w-full bg-white/5 border border-white/5 rounded-2xl py-6 px-8 text-lg font-serif italic text-white focus:border-[#c8a24a] transition-all outline-none"
+              />
+            </div>
+
+            <div className="h-px bg-white/5 w-full" />
+
+            <div className="space-y-6">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-bold text-white uppercase tracking-tight">
+                    UWAGA Notices
+                  </h3>
+                  <p className="text-[10px] text-white/20 uppercase font-black tracking-widest mt-0.5">
+                    Add, edit, hide or delete customer notice texts
+                  </p>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={addNotice}
+                  className="flex items-center gap-2 rounded-2xl bg-white/5 border border-white/10 px-5 py-3 text-[10px] font-black uppercase tracking-widest text-white hover:bg-white/10 transition-all"
+                >
+                  <Plus size={16} />
+                  Add Notice
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {notices.map((notice, index) => (
+                  <div
+                    key={index}
+                    className="rounded-2xl border border-white/10 bg-white/5 p-4 md:p-5 space-y-4"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-[90px_1fr_auto] gap-3">
+                      <input
+                        type="text"
+                        value={notice.icon}
+                        onChange={(e) =>
+                          updateNotice(index, "icon", e.target.value)
+                        }
+                        placeholder="👥"
+                        className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white font-bold outline-none focus:border-[#c8a24a]/60"
+                      />
+
+                      <textarea
+                        value={notice.text}
+                        onChange={(e) =>
+                          updateNotice(index, "text", e.target.value)
+                        }
+                        placeholder="Notice text..."
+                        className="min-h-[80px] resize-none rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white font-medium outline-none focus:border-[#c8a24a]/60"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => removeNotice(index)}
+                        className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-red-400 hover:bg-red-500 hover:text-white transition-all"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+
+                    <label className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-white/40">
+                      <input
+                        type="checkbox"
+                        checked={notice.isActive}
+                        onChange={(e) =>
+                          updateNotice(index, "isActive", e.target.checked)
+                        }
+                      />
+                      Active on customer menu
+                    </label>
+                  </div>
+                ))}
+
+                {notices.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-white/10 py-12 text-center text-white/20 text-[10px] font-black uppercase tracking-widest">
+                    No notices yet
+                  </div>
+                )}
               </div>
             </div>
 
@@ -104,9 +232,12 @@ export default function SettingsPage() {
                 {saving ? (
                   <Loader2 className="animate-spin" size={16} />
                 ) : (
-                  <Save size={16} className="group-hover:scale-125 transition-transform" />
+                  <Save
+                    size={16}
+                    className="group-hover:scale-125 transition-transform"
+                  />
                 )}
-                Update Global Config
+                Save Settings
               </button>
             </div>
           </form>
@@ -118,8 +249,7 @@ export default function SettingsPage() {
           <Globe size={24} />
         </div>
         <p className="text-[11px] text-white/50 leading-relaxed font-medium uppercase tracking-wider">
-          Pro Tip: Use <span className="text-[#c8a24a] italic font-bold">Standard International Format</span> (e.g., +48 ...) 
-          to ensure the "Quick Call" button works perfectly on all mobile devices and operating systems.
+          Pro Tip: Notices appear in the customer menu under the UWAGA section.
         </p>
       </div>
     </div>
