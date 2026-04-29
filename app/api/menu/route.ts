@@ -3,6 +3,15 @@ import { connectDB } from "@/lib/mongodb";
 import Product from "@/lib/models/Product";
 import Category from "@/lib/models/Category";
 
+export const dynamic = "force-dynamic";
+
+function toStr(value: any) {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (value._id) return String(value._id);
+  return String(value);
+}
+
 export async function GET() {
   try {
     await connectDB();
@@ -10,15 +19,21 @@ export async function GET() {
     const categories = await Category.find().sort({ order: 1, createdAt: 1 });
     const products = await Product.find().sort({ order: 1, createdAt: -1 });
 
-    const menu = categories.map((cat) => ({
-      id: cat.anchorId || String(cat._id),
-      title: cat.title?.en || cat.title?.pl || "",
-      imageLabel: (cat.title?.en || cat.title?.pl || "").toUpperCase(),
-      image: cat.image || "/product-default.jpg",
-      items: products
+    const menu = categories.map((cat) => {
+      const catMongoId = String(cat._id);
+      const catAnchorId = cat.anchorId || catMongoId;
+
+      const items = products
         .filter((p) => {
-          const productCategory = p.categoryId || p.category || "snacks";
-          return productCategory === cat.anchorId || productCategory === String(cat._id);
+          const productCategoryId = toStr(p.categoryId);
+          const productCategory = toStr(p.category);
+
+          return (
+            productCategoryId === catMongoId ||
+            productCategoryId === catAnchorId ||
+            productCategory === catMongoId ||
+            productCategory === catAnchorId
+          );
         })
         .map((p) => ({
           name: p.name?.en || p.name?.pl || "",
@@ -26,8 +41,16 @@ export async function GET() {
           price: p.price || "",
           badge: p.badge || undefined,
           image: p.image || "",
-        })),
-    }));
+        }));
+
+      return {
+        id: catAnchorId,
+        title: cat.title?.en || cat.title?.pl || "",
+        imageLabel: (cat.title?.en || cat.title?.pl || "").toUpperCase(),
+        image: cat.image || "/product-default.jpg",
+        items,
+      };
+    });
 
     return NextResponse.json(menu);
   } catch (error) {
