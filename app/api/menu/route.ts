@@ -26,10 +26,17 @@ export async function GET() {
     await connectDB();
 
     const dbCategories = await Category.find().sort({ order: 1, createdAt: 1 });
-    const products = await Product.find({ isActive: true }).sort({
-      order: 1,
-      createdAt: -1,
-    });
+    const products = await Product.find({
+  $or: [
+    { isActive: true },
+    { isActive: { $exists: false } },
+    { active: true },
+    { active: { $exists: false } },
+  ],
+}).sort({
+  order: 1,
+  createdAt: -1,
+});
 
     const dbCategoryList = dbCategories.map((cat) => ({
       id: cat.anchorId || String(cat._id),
