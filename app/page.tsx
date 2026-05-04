@@ -3,9 +3,16 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
+type Lang = "pl" | "en";
+
+type LocalizedText = {
+  pl: string;
+  en: string;
+};
+
 type MenuItem = {
-  name: string;
-  description: string;
+  name: LocalizedText;
+  description: LocalizedText;
   price: string;
   prices?: { label: string; value: string; _id?: string }[];
   badge?: "Best Seller" | "Premium" | "New";
@@ -14,8 +21,8 @@ type MenuItem = {
 
 type Category = {
   id: string;
-  title: string;
-  imageLabel: string;
+  title: LocalizedText;
+  imageLabel: LocalizedText;
   image?: string;
   items: MenuItem[];
 };
@@ -30,6 +37,29 @@ type Notice = {
 export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [notices, setNotices] = useState<Notice[]>([]);
+  const [lang, setLang] = useState<Lang>("pl");
+
+  const getText = (value: LocalizedText) => {
+    return value?.[lang] || value?.pl || value?.en || "";
+  };
+
+  const noticeText = (text: string) => {
+    if (lang === "pl") return text;
+
+    if (text.includes("Powyżej 3 osób")) {
+      return "For groups of more than 3 people, shisha is sold only with the purchase of drinks.";
+    }
+
+    if (text.includes("nie spożywać")) {
+      return "Please do not consume drinks or food brought from outside.";
+    }
+
+    if (text.includes("Za uszkodzenia")) {
+      return "Customers are responsible for damage to water pipes, sofas, and other furniture caused by careless behavior.";
+    }
+
+    return text;
+  };
 
   useEffect(() => {
     async function loadMenu() {
@@ -99,7 +129,28 @@ export default function Home() {
               "linear-gradient(135deg, #efefef 0%, #e8e8e8 35%, #f5f5f5 50%, #e2e2e2 100%)",
           }}
         >
-          <section className="px-4 pb-5 pt-7 text-center">
+          <section className="relative px-4 pb-5 pt-7 text-center">
+            <div className="absolute right-4 top-4 flex overflow-hidden rounded-full border border-[#b89245]/40 bg-white/80 text-[11px] font-black shadow-sm">
+              <button
+                type="button"
+                onClick={() => setLang("pl")}
+                className={`px-3 py-1 ${
+                  lang === "pl" ? "bg-black text-white" : "text-black/60"
+                }`}
+              >
+                PL
+              </button>
+              <button
+                type="button"
+                onClick={() => setLang("en")}
+                className={`px-3 py-1 ${
+                  lang === "en" ? "bg-black text-white" : "text-black/60"
+                }`}
+              >
+                EN
+              </button>
+            </div>
+
             <div className="mb-4 flex items-center justify-center gap-3">
               <span className="h-px w-16 bg-[#b89245]" />
               <span className="text-[20px] text-[#b89245]">✦</span>
@@ -119,7 +170,7 @@ export default function Home() {
               <div className="mb-4 flex items-center justify-center gap-3">
                 <span className="h-px w-14 bg-[#b89245]" />
                 <span className="text-[18px] font-bold tracking-[0.32em] text-[#b89245]">
-                  UWAGA
+                  {lang === "pl" ? "UWAGA" : "NOTICE"}
                 </span>
                 <span className="h-px w-14 bg-[#b89245]" />
               </div>
@@ -136,7 +187,7 @@ export default function Home() {
                         className="text-[14px] leading-5 text-black/80"
                         style={{ fontFamily: "Georgia, serif" }}
                       >
-                        {notice.text}
+                        {noticeText(notice.text)}
                       </p>
                     </div>
 
@@ -164,7 +215,7 @@ export default function Home() {
                   href={`#${category.id}`}
                   className="whitespace-nowrap rounded-full border border-black/15 bg-white px-3 py-2 text-[11px] font-bold text-black"
                 >
-                  {category.title}
+                  {getText(category.title)}
                 </a>
               ))}
 
@@ -187,7 +238,7 @@ export default function Home() {
                 >
                   <Image
                     src={category.image || defaultProductImage}
-                    alt={category.title}
+                    alt={getText(category.title)}
                     fill
                     className="object-cover opacity-100 transition duration-300 group-hover:scale-105"
                     sizes="(max-width: 430px) 50vw, 200px"
@@ -200,7 +251,7 @@ export default function Home() {
                       className="text-[17px] font-bold uppercase leading-5 tracking-wide text-white drop-shadow-lg"
                       style={{ fontFamily: "Georgia, serif" }}
                     >
-                      {category.imageLabel}
+                      {getText(category.imageLabel)}
                     </span>
                   </div>
                 </a>
@@ -220,7 +271,7 @@ export default function Home() {
                     className="text-[40px] font-black leading-none text-black sm:text-[52px]"
                     style={{ fontFamily: "Arial Black, Arial, sans-serif" }}
                   >
-                    {category.title}
+                    {getText(category.title)}
                   </h2>
 
                   <a
@@ -241,7 +292,7 @@ export default function Home() {
                       <div className="relative h-[74px] w-[74px] shrink-0 overflow-hidden rounded-[10px] border border-black/15 bg-white">
                         <Image
                           src={item.image || defaultProductImage}
-                          alt={item.name}
+                          alt={getText(item.name)}
                           fill
                           className="object-cover"
                           sizes="74px"
@@ -254,7 +305,7 @@ export default function Home() {
                             className="text-[18px] font-black leading-6 text-black"
                             style={{ fontFamily: "Georgia, serif" }}
                           >
-                            {item.name}
+                            {getText(item.name)}
                           </h3>
 
                           {item.badge && (
@@ -273,7 +324,7 @@ export default function Home() {
                         </div>
 
                         <p className="mt-1 text-[11px] leading-4 text-black/60">
-                          {item.description}
+                          {getText(item.description)}
                         </p>
                       </div>
 
@@ -328,8 +379,9 @@ export default function Home() {
               className="mx-auto max-w-[290px] text-[14px] font-semibold leading-5"
               style={{ fontFamily: "Georgia, serif" }}
             >
-              W weekendy i święta do każdego rachunku doliczamy 10% opłaty
-              serwisowej.
+              {lang === "pl"
+                ? "W weekendy i święta do każdego rachunku doliczamy 10% opłaty serwisowej."
+                : "On weekends and holidays, a 10% service charge is added to every bill."}
             </p>
 
             <a
@@ -348,7 +400,7 @@ export default function Home() {
               className="mt-5 block overflow-hidden rounded-[10px] border border-black/10 bg-white shadow-sm"
             >
               <div className="flex aspect-[4/3] items-center justify-center bg-[linear-gradient(135deg,#dfe7ef,#f8f8f8,#dcdcdc)] text-center text-[14px] font-semibold text-black/60">
-                Tap for map & directions
+                {lang === "pl" ? "Dotknij, aby otworzyć mapę" : "Tap for map & directions"}
               </div>
             </a>
 
@@ -357,7 +409,7 @@ export default function Home() {
                 className="mb-4 text-[20px] font-bold"
                 style={{ fontFamily: "Georgia, serif" }}
               >
-                Opening Hours
+                {lang === "pl" ? "Godziny otwarcia" : "Opening Hours"}
               </h3>
 
               <div className="space-y-2">
@@ -386,7 +438,9 @@ export default function Home() {
               className="mt-8 space-y-1 text-[16px] font-bold leading-8"
               style={{ fontFamily: "Georgia, serif" }}
             >
-              <p className="text-[18px]">Get in Touch!</p>
+              <p className="text-[18px]">
+                {lang === "pl" ? "Kontakt" : "Get in Touch!"}
+              </p>
               <p>Fajka Bar</p>
               <p>Żurawia 22, 00-515</p>
               <p>Warszawa</p>
@@ -398,7 +452,7 @@ export default function Home() {
                 className="inline-flex items-center gap-3 rounded-full border border-black/15 bg-white px-5 py-3 text-[15px] font-bold shadow-sm"
               >
                 <span>📞</span>
-                <span>Call Us</span>
+                <span>{lang === "pl" ? "Zadzwoń" : "Call Us"}</span>
               </a>
 
               <a
@@ -425,7 +479,7 @@ export default function Home() {
                 className="inline-flex items-center gap-3 rounded-full border border-black/15 bg-black px-5 py-3 text-[15px] font-bold text-white shadow-sm"
               >
                 <span>📍</span>
-                <span>Get Directions</span>
+                <span>{lang === "pl" ? "Jak dojechać" : "Get Directions"}</span>
               </a>
             </div>
           </section>

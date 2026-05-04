@@ -28,6 +28,11 @@ export async function GET() {
       const catMongoId = String(cat._id);
       const catAnchorId = cat.anchorId || catMongoId;
 
+      const title = {
+        pl: cat.title?.pl || cat.title?.en || "",
+        en: cat.title?.en || cat.title?.pl || "",
+      };
+
       const items = products
         .filter((p: any) => {
           const productCategoryId = toStr(p.categoryId);
@@ -41,18 +46,27 @@ export async function GET() {
           );
         })
         .map((p: any) => ({
-  name: p.name?.en || p.name?.pl || "",
-  description: p.desc?.en || p.desc?.pl || "",
-  price: p.price || "",
-  prices: Array.isArray(p.prices) ? p.prices : [],
-  badge: p.badge || undefined,
-  image: p.image || "",
-}));
+          name: {
+            pl: p.name?.pl || p.name?.en || "",
+            en: p.name?.en || p.name?.pl || "",
+          },
+          description: {
+            pl: p.desc?.pl || p.desc?.en || "",
+            en: p.desc?.en || p.desc?.pl || "",
+          },
+          price: p.price || "",
+          prices: Array.isArray(p.prices) ? p.prices : [],
+          badge: p.badge || undefined,
+          image: p.image || "",
+        }));
 
       return {
         id: catAnchorId,
-        title: cat.title?.en || cat.title?.pl || "",
-        imageLabel: (cat.title?.en || cat.title?.pl || "").toUpperCase(),
+        title,
+        imageLabel: {
+          pl: title.pl.toUpperCase(),
+          en: title.en.toUpperCase(),
+        },
         image: cat.image || "/product-default.jpg",
         items,
       };
