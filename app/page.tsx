@@ -186,13 +186,15 @@ export default function Home() {
                   className="group relative block aspect-square overflow-hidden rounded-[6px] border border-black/10 bg-black shadow-md"
                 >
                   <Image
-             src={category.image || defaultProductImage}
-              alt={category.title}
-           fill
-            className="object-cover opacity-100 transition duration-300 group-hover:scale-105"
-             sizes="(max-width: 430px) 50vw, 200px"
-           />
-                   <div className="absolute inset-0 bg-black/15" />
+                    src={category.image || defaultProductImage}
+                    alt={category.title}
+                    fill
+                    className="object-cover opacity-100 transition duration-300 group-hover:scale-105"
+                    sizes="(max-width: 430px) 50vw, 200px"
+                  />
+
+                  <div className="absolute inset-0 bg-black/5" />
+
                   <div className="absolute inset-0 flex items-end justify-center p-3 text-center">
                     <span
                       className="text-[17px] font-bold uppercase leading-5 tracking-wide text-white drop-shadow-lg"
@@ -288,22 +290,22 @@ export default function Home() {
                             )}
 
                             {item.prices.map((priceOption, priceIndex) => (
-  <div
-    key={priceOption._id || priceIndex}
-    className="flex w-[82px] items-center justify-between rounded-full border border-[#b89245]/40 bg-white px-2.5 py-1 shadow-sm"
-  >
-    <span className="text-[10px] font-black text-black/55">
-      {priceOption.label}
-    </span>
+                              <div
+                                key={priceOption._id || priceIndex}
+                                className="flex w-[82px] items-center justify-between rounded-full border border-[#b89245]/40 bg-white px-2.5 py-1 shadow-sm"
+                              >
+                                <span className="text-[10px] font-black text-black/55">
+                                  {priceOption.label}
+                                </span>
 
-    <span
-      className="text-[13px] font-bold leading-none text-[#b89245]"
-      style={{ fontFamily: "Georgia, serif" }}
-    >
-      {priceOption.value}
-    </span>
-  </div>
-))}
+                                <span
+                                  className="text-[13px] font-bold leading-none text-[#b89245]"
+                                  style={{ fontFamily: "Georgia, serif" }}
+                                >
+                                  {priceOption.value}
+                                </span>
+                              </div>
+                            ))}
                           </div>
                         ) : (
                           <span
