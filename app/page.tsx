@@ -186,15 +186,13 @@ export default function Home() {
                   className="group relative block aspect-square overflow-hidden rounded-[6px] border border-black/10 bg-black shadow-md"
                 >
                   <Image
-                    src={category.image || defaultProductImage}
-                    alt={category.title}
-                    fill
-                    className="object-cover opacity-65 transition duration-300 group-hover:scale-105"
-                    sizes="(max-width: 430px) 50vw, 200px"
-                  />
-
-                  <div className="absolute inset-0 bg-black/35" />
-
+             src={category.image || defaultProductImage}
+              alt={category.title}
+           fill
+            className="object-cover opacity-100 transition duration-300 group-hover:scale-105"
+             sizes="(max-width: 430px) 50vw, 200px"
+           />
+                   <div className="absolute inset-0 bg-black/15" />
                   <div className="absolute inset-0 flex items-end justify-center p-3 text-center">
                     <span
                       className="text-[17px] font-bold uppercase leading-5 tracking-wide text-white drop-shadow-lg"
