@@ -17,6 +17,7 @@ export async function PUT(
       {
         ...body,
         categoryId: body.categoryId || body.category || "",
+        badge: body.badge ?? "",
       },
       { new: true }
     );
@@ -24,7 +25,11 @@ export async function PUT(
     return NextResponse.json(updatedProduct);
   } catch (error) {
     console.error("ADMIN UPDATE PRODUCT ERROR:", error);
-    return NextResponse.json({ error: "Product update failed" }, { status: 500 });
+
+    return NextResponse.json(
+      { error: "Product update failed" },
+      { status: 500 }
+    );
   }
 }
 
@@ -41,6 +46,10 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("ADMIN DELETE PRODUCT ERROR:", error);
-    return NextResponse.json({ error: "Product delete failed" }, { status: 500 });
+
+    return NextResponse.json(
+      { error: "Product delete failed" },
+      { status: 500 }
+    );
   }
 }

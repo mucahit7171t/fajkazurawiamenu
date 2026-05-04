@@ -96,7 +96,7 @@ export default function ProductModal({
 
       if (!dataToSave.subcategory) delete dataToSave.subcategory;
       if (!dataToSave.price) delete dataToSave.price;
-      if (!dataToSave.badge) delete dataToSave.badge;
+      dataToSave.badge = formData.badge || "";
 
       await onSave(dataToSave);
       onClose();

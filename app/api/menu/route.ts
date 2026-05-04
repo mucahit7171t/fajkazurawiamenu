@@ -3,7 +3,7 @@ import { connectDB } from "@/lib/mongodb";
 import Product from "@/lib/models/Product";
 import Category from "@/lib/models/Category";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 function toStr(value: any) {
   if (!value) return "";
@@ -16,15 +16,20 @@ export async function GET() {
   try {
     await connectDB();
 
-    const categories = await Category.find().sort({ order: 1, createdAt: 1 });
-    const products = await Product.find().sort({ order: 1, createdAt: -1 });
+    const categories = await Category.find()
+      .sort({ order: 1, createdAt: 1 })
+      .lean();
 
-    const menu = categories.map((cat) => {
+    const products = await Product.find()
+      .sort({ order: 1, createdAt: -1 })
+      .lean();
+
+    const menu = categories.map((cat: any) => {
       const catMongoId = String(cat._id);
       const catAnchorId = cat.anchorId || catMongoId;
 
       const items = products
-        .filter((p) => {
+        .filter((p: any) => {
           const productCategoryId = toStr(p.categoryId);
           const productCategory = toStr(p.category);
 
@@ -35,13 +40,14 @@ export async function GET() {
             productCategory === catAnchorId
           );
         })
-        .map((p) => ({
-          name: p.name?.en || p.name?.pl || "",
-          description: p.desc?.en || p.desc?.pl || "",
-          price: p.price || "",
-          badge: p.badge || undefined,
-          image: p.image || "",
-        }));
+        .map((p: any) => ({
+  name: p.name?.en || p.name?.pl || "",
+  description: p.desc?.en || p.desc?.pl || "",
+  price: p.price || "",
+  prices: Array.isArray(p.prices) ? p.prices : [],
+  badge: p.badge || undefined,
+  image: p.image || "",
+}));
 
       return {
         id: catAnchorId,

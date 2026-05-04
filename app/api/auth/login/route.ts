@@ -6,7 +6,7 @@ export async function POST(request: Request) {
   const username = body.username;
   const password = body.password;
 
-  if (username === "admin" && password === "admin123") {
+  if (username === "admin" && password === "fajka2323") {
     return NextResponse.json({
       success: true,
       user: {

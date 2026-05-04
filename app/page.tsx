@@ -7,6 +7,7 @@ type MenuItem = {
   name: string;
   description: string;
   price: string;
+  prices?: { label: string; value: string; _id?: string }[];
   badge?: "Best Seller" | "Premium" | "New";
   image?: string;
 };
@@ -33,7 +34,7 @@ export default function Home() {
   useEffect(() => {
     async function loadMenu() {
       try {
-        const res = await fetch("/api/menu", { cache: "no-store" });
+        const res = await fetch("/api/menu", { next: { revalidate: 60 } });
         const data = await res.json();
 
         if (Array.isArray(data)) {
@@ -86,10 +87,10 @@ export default function Home() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#5f6168] px-3 py-6 text-black">
+    <main className="min-h-screen bg-[#5f6168] px-1 py-3 text-black sm:px-3 sm:py-6">
       <div
         id="top"
-        className="mx-auto max-w-[430px] rounded-[28px] bg-[#ececec] p-3 shadow-2xl ring-1 ring-black/10"
+        className="mx-auto w-full max-w-[470px] rounded-[24px] bg-[#ececec] p-2 shadow-2xl ring-1 ring-black/10 sm:p-3"
       >
         <div
           className="overflow-hidden rounded-[18px] border border-black/10"
@@ -276,13 +277,44 @@ export default function Home() {
                         </p>
                       </div>
 
-                      <div className="pt-1 text-right">
-                        <span
-                          className="text-[18px] font-bold text-[#ff6d6d]"
-                          style={{ fontFamily: "Georgia, serif" }}
-                        >
-                          {item.price}
-                        </span>
+                      <div className="min-w-[96px] shrink-0 pt-1 text-right">
+                        {item.prices && item.prices.length > 0 ? (
+                          <div className="flex flex-col items-end gap-1.5">
+                            {item.price && (
+                              <div
+                                className="text-[18px] font-bold leading-none text-[#ff6d6d]"
+                                style={{ fontFamily: "Georgia, serif" }}
+                              >
+                                {item.price}
+                              </div>
+                            )}
+
+                            {item.prices.map((priceOption, priceIndex) => (
+  <div
+    key={priceOption._id || priceIndex}
+    className="flex w-[82px] items-center justify-between rounded-full border border-[#b89245]/40 bg-white px-2.5 py-1 shadow-sm"
+  >
+    <span className="text-[10px] font-black text-black/55">
+      {priceOption.label}
+    </span>
+
+    <span
+      className="text-[13px] font-bold leading-none text-[#b89245]"
+      style={{ fontFamily: "Georgia, serif" }}
+    >
+      {priceOption.value}
+    </span>
+  </div>
+))}
+                          </div>
+                        ) : (
+                          <span
+                            className="text-[18px] font-bold text-[#ff6d6d]"
+                            style={{ fontFamily: "Georgia, serif" }}
+                          >
+                            {item.price}
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))}
