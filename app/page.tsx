@@ -328,29 +328,35 @@ export default function Home() {
                         </p>
                       </div>
 
-                      <div className="min-w-[96px] shrink-0 pt-1 text-right">
+                      <div className="min-w-[92px] shrink-0 pt-1 text-right">
                         {item.prices && item.prices.length > 0 ? (
-                          <div className="flex flex-col items-end gap-1.5">
+                          <div className="space-y-1">
                             {item.price && (
-                              <div
-                                className="text-[18px] font-bold leading-none text-[#ff6d6d]"
-                                style={{ fontFamily: "Georgia, serif" }}
-                              >
-                                {item.price}
+                              <div className="flex items-center justify-between gap-3">
+                                <span className="whitespace-nowrap text-[13px] font-bold text-black/75">
+                                  1 shot
+                                </span>
+
+                                <span
+                                  className="whitespace-nowrap text-[18px] font-bold text-[#ff6d6d]"
+                                  style={{ fontFamily: "Georgia, serif" }}
+                                >
+                                  {item.price}
+                                </span>
                               </div>
                             )}
 
                             {item.prices.map((priceOption, priceIndex) => (
                               <div
                                 key={priceOption._id || priceIndex}
-                                className="flex w-[82px] items-center justify-between rounded-full border border-[#b89245]/40 bg-white px-2.5 py-1 shadow-sm"
+                                className="flex items-center justify-between gap-3"
                               >
-                                <span className="text-[10px] font-black text-black/55">
+                                <span className="whitespace-nowrap text-[13px] font-bold text-black/75">
                                   {priceOption.label}
                                 </span>
 
                                 <span
-                                  className="text-[13px] font-bold leading-none text-[#b89245]"
+                                  className="whitespace-nowrap text-[18px] font-bold text-[#ff6d6d]"
                                   style={{ fontFamily: "Georgia, serif" }}
                                 >
                                   {priceOption.value}
@@ -400,7 +406,9 @@ export default function Home() {
               className="mt-5 block overflow-hidden rounded-[10px] border border-black/10 bg-white shadow-sm"
             >
               <div className="flex aspect-[4/3] items-center justify-center bg-[linear-gradient(135deg,#dfe7ef,#f8f8f8,#dcdcdc)] text-center text-[14px] font-semibold text-black/60">
-                {lang === "pl" ? "Dotknij, aby otworzyć mapę" : "Tap for map & directions"}
+                {lang === "pl"
+                  ? "Dotknij, aby otworzyć mapę"
+                  : "Tap for map & directions"}
               </div>
             </a>
 
@@ -479,7 +487,9 @@ export default function Home() {
                 className="inline-flex items-center gap-3 rounded-full border border-black/15 bg-black px-5 py-3 text-[15px] font-bold text-white shadow-sm"
               >
                 <span>📍</span>
-                <span>{lang === "pl" ? "Jak dojechać" : "Get Directions"}</span>
+                <span>
+                  {lang === "pl" ? "Jak dojechać" : "Get Directions"}
+                </span>
               </a>
             </div>
           </section>
