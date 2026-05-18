@@ -6,11 +6,16 @@ const ProductSchema = new Schema(
       pl: { type: String, default: "" },
       en: { type: String, default: "" },
     },
+
     desc: {
       pl: { type: String, default: "" },
       en: { type: String, default: "" },
     },
-    price: { type: String, default: "" },
+
+    price: {
+      type: String,
+      default: "",
+    },
 
     badge: {
       type: String,
@@ -24,10 +29,36 @@ const ProductSchema = new Schema(
         value: { type: String, default: "" },
       },
     ],
-    categoryId: { type: String, default: "" },
-    image: { type: String, default: "" },
-    isActive: { type: Boolean, default: true },
-    order: { type: Number, default: 0 },
+
+    categoryId: {
+      type: String,
+      default: "",
+    },
+
+    category: {
+      type: String,
+      default: "",
+    },
+
+    subcategory: {
+      type: String,
+      default: "",
+    },
+
+    image: {
+      type: String,
+      default: "",
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    order: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

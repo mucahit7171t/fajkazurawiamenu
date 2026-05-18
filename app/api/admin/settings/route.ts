@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Settings from "@/lib/models/Settings";
+import { requireAdmin } from "@/lib/auth";
 
 const defaultSettings = {
   siteName: "FAJKA BAR",
@@ -9,6 +10,15 @@ const defaultSettings = {
   language: "pl",
   isOpen: true,
   phone: "+48 000 000 000",
+  openingHours: {
+    monday: "12:00 - 02:00",
+    tuesday: "12:00 - 02:00",
+    wednesday: "12:00 - 02:00",
+    thursday: "12:00 - 02:00",
+    friday: "12:00 - 04:00",
+    saturday: "12:00 - 04:00",
+    sunday: "12:00 - 02:00",
+  },
   notices: [
     {
       icon: "👥",
@@ -31,24 +41,38 @@ const defaultSettings = {
   ],
 };
 
-export async function PUT(req: Request) {
+export async function PUT(req: NextRequest) {
+  const authError = requireAdmin(req);
+  if (authError) return authError;
+
   try {
     await connectDB();
 
     const body = await req.json();
     const { key, value } = body;
 
+    if (!key || typeof key !== "string") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Setting key is required",
+        },
+        { status: 400 }
+      );
+    }
+
     const current = await Settings.findOne({ key: "site-settings" });
 
     const updatedValue = {
-      ...(current?.value || defaultSettings),
+      ...defaultSettings,
+      ...(current?.value || {}),
       [key]: value,
     };
 
     const settings = await Settings.findOneAndUpdate(
       { key: "site-settings" },
       { value: updatedValue },
-      { upsert: true, returnDocument: "after" }
+      { upsert: true, new: true }
     );
 
     return NextResponse.json({
@@ -57,8 +81,12 @@ export async function PUT(req: Request) {
     });
   } catch (error) {
     console.error("ADMIN SETTINGS UPDATE ERROR:", error);
+
     return NextResponse.json(
-      { success: false, error: "Settings update failed" },
+      {
+        success: false,
+        error: "Settings update failed",
+      },
       { status: 500 }
     );
   }

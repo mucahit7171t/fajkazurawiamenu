@@ -8,6 +8,16 @@ const defaultSettings = {
   currency: "zł",
   language: "pl",
   isOpen: true,
+  phone: "+48 000 000 000",
+  openingHours: {
+    monday: "12:00 - 02:00",
+    tuesday: "12:00 - 02:00",
+    wednesday: "12:00 - 02:00",
+    thursday: "12:00 - 02:00",
+    friday: "12:00 - 04:00",
+    saturday: "12:00 - 04:00",
+    sunday: "12:00 - 02:00",
+  },
   notices: [
     {
       icon: "👥",
@@ -34,50 +44,19 @@ export async function GET() {
   try {
     await connectDB();
 
-    let settings = await Settings.findOne({ key: "site-settings" });
+    const settings = await Settings.findOne({ key: "site-settings" }).lean();
 
     if (!settings) {
-      settings = await Settings.create({
-        key: "site-settings",
-        value: defaultSettings,
-      });
+      return NextResponse.json(defaultSettings);
     }
 
-    return NextResponse.json(settings.value);
-  } catch (error) {
-    console.error("GET SETTINGS ERROR:", error);
-    return NextResponse.json(defaultSettings);
-  }
-}
-
-export async function PUT(req: Request) {
-  try {
-    await connectDB();
-
-    const body = await req.json();
-
-    const current = await Settings.findOne({ key: "site-settings" });
-
-    const updatedValue = {
-      ...(current?.value || defaultSettings),
-      ...body,
-    };
-
-    const settings = await Settings.findOneAndUpdate(
-      { key: "site-settings" },
-      { value: updatedValue },
-      { upsert: true, returnDocument: "after" }
-    );
-
     return NextResponse.json({
-      success: true,
-      settings: settings.value,
+      ...defaultSettings,
+      ...(settings as any).value,
     });
   } catch (error) {
-    console.error("UPDATE SETTINGS ERROR:", error);
-    return NextResponse.json(
-      { success: false, error: "Settings update failed" },
-      { status: 500 }
-    );
+    console.error("GET PUBLIC SETTINGS ERROR:", error);
+
+    return NextResponse.json(defaultSettings);
   }
 }

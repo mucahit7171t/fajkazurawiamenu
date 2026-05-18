@@ -3,6 +3,7 @@
 import React, { useRef, useState } from "react";
 import { Image as ImageIcon, Upload, Loader2 } from "lucide-react";
 import axios from "axios";
+import { useAuthStore } from "@/store/authStore";
 
 interface ImageUploadFieldProps {
   value: string;
@@ -19,6 +20,7 @@ export default function ImageUploadField({
 }: ImageUploadFieldProps) {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const token = useAuthStore((state) => state.token);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -28,6 +30,11 @@ export default function ImageUploadField({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (!token) {
+      alert("Your admin session expired. Please log in again.");
+      return;
+    }
+
     setUploading(true);
 
     const formData = new FormData();
@@ -35,7 +42,10 @@ export default function ImageUploadField({
 
     try {
       const response = await axios.post("/api/admin/images", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       const uploadedUrl =

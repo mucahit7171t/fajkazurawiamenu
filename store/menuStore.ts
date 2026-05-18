@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import axios from 'axios';
-import { useAuthStore } from './authStore';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import axios from "axios";
+import { useAuthStore } from "./authStore";
 
 interface LocalizedString {
   pl: string;
@@ -21,7 +21,9 @@ interface Product {
   prices?: PriceOption[];
   image?: string;
   category: string;
+  categoryId?: string;
   subcategory?: string;
+  badge?: string;
   order: number;
 }
 
@@ -50,7 +52,6 @@ interface MenuState {
   lastFetched: number | null;
   fetchMenu: (force?: boolean) => Promise<void>;
 
-  // Admin Actions
   createCategory: (data: any) => Promise<void>;
   updateCategory: (id: string, data: any) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
@@ -62,12 +63,35 @@ interface MenuState {
   createProduct: (data: any) => Promise<void>;
   updateProduct: (id: string, data: any) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
-  reorder: (type: string, items: { id: string; order: number }[]) => Promise<void>;
+
+  reorder: (
+    type: string,
+    items: { id: string; order: number }[]
+  ) => Promise<void>;
 }
 
-const getAuthHeader = () => ({
-  headers: { Authorization: `Bearer ${useAuthStore.getState().token}` },
-});
+const getAuthHeader = () => {
+  const token = useAuthStore.getState().token;
+
+  if (!token) {
+    throw new Error("Admin session expired. Please log in again.");
+  }
+
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+};
+
+const handleAdminError = (error: unknown) => {
+  if (axios.isAxiosError(error) && error.response?.status === 401) {
+    useAuthStore.getState().logout();
+    throw new Error("Admin session expired. Please log in again.");
+  }
+
+  throw error;
+};
 
 export const useMenuStore = create<MenuState>()(
   persist(
@@ -77,72 +101,141 @@ export const useMenuStore = create<MenuState>()(
       error: null,
       lastFetched: null,
 
-      fetchMenu: async (force = false) => {
-        const { menu, lastFetched } = get();
-
-        const isStale = !lastFetched || Date.now() - lastFetched > 1000 * 60 * 60;
-
+      fetchMenu: async () => {
         set({ loading: true, error: null });
+
         try {
-          const response = await axios.get('/api/admin/menu');
-          set({ menu: response.data, loading: false, lastFetched: Date.now() });
-        } catch (error: any) {
+          const response = await axios.get("/api/admin/menu", getAuthHeader());
+
           set({
-            error: error.response?.data?.message || 'Failed to fetch menu',
+            menu: response.data,
             loading: false,
+            lastFetched: Date.now(),
+            error: null,
+          });
+        } catch (error: unknown) {
+          console.error("Failed to fetch admin menu:", error);
+
+          if (axios.isAxiosError(error) && error.response?.status === 401) {
+            useAuthStore.getState().logout();
+            set({
+              loading: false,
+              error: "Admin session expired. Please log in again.",
+            });
+            return;
+          }
+
+          set({
+            loading: false,
+            error: "Failed to fetch menu",
           });
         }
       },
 
-      // Category CRUD
       createCategory: async (data) => {
-        await axios.post('/api/admin/categories', data, getAuthHeader());
-        await get().fetchMenu(true);
+        try {
+          await axios.post("/api/admin/categories", data, getAuthHeader());
+          await get().fetchMenu(true);
+        } catch (error) {
+          handleAdminError(error);
+        }
       },
+
       updateCategory: async (id, data) => {
-        await axios.put(`/api/admin/categories/${id}`, data, getAuthHeader());
-        await get().fetchMenu(true);
+        try {
+          await axios.put(`/api/admin/categories/${id}`, data, getAuthHeader());
+          await get().fetchMenu(true);
+        } catch (error) {
+          handleAdminError(error);
+        }
       },
+
       deleteCategory: async (id) => {
-        await axios.delete(`/api/admin/categories/${id}`, getAuthHeader());
-        await get().fetchMenu(true);
+        try {
+          await axios.delete(`/api/admin/categories/${id}`, getAuthHeader());
+          await get().fetchMenu(true);
+        } catch (error) {
+          handleAdminError(error);
+        }
       },
 
-      // Subcategory CRUD
       createSubcategory: async (data) => {
-        await axios.post('/api/admin/subcategories', data, getAuthHeader());
-        await get().fetchMenu(true);
-      },
-      updateSubcategory: async (id, data) => {
-        await axios.put(`/api/admin/subcategories/${id}`, data, getAuthHeader());
-        await get().fetchMenu(true);
-      },
-      deleteSubcategory: async (id) => {
-        await axios.delete(`/api/admin/subcategories/${id}`, getAuthHeader());
-        await get().fetchMenu(true);
+        try {
+          await axios.post("/api/admin/subcategories", data, getAuthHeader());
+          await get().fetchMenu(true);
+        } catch (error) {
+          handleAdminError(error);
+        }
       },
 
-      // Product CRUD
+      updateSubcategory: async (id, data) => {
+        try {
+          await axios.put(
+            `/api/admin/subcategories/${id}`,
+            data,
+            getAuthHeader()
+          );
+          await get().fetchMenu(true);
+        } catch (error) {
+          handleAdminError(error);
+        }
+      },
+
+      deleteSubcategory: async (id) => {
+        try {
+          await axios.delete(`/api/admin/subcategories/${id}`, getAuthHeader());
+          await get().fetchMenu(true);
+        } catch (error) {
+          handleAdminError(error);
+        }
+      },
+
       createProduct: async (data) => {
-        await axios.post('/api/admin/products', data, getAuthHeader());
-        await get().fetchMenu(true);
+        try {
+          await axios.post("/api/admin/products", data, getAuthHeader());
+          await get().fetchMenu(true);
+        } catch (error) {
+          handleAdminError(error);
+        }
       },
+
       updateProduct: async (id, data) => {
-        await axios.put(`/api/admin/products/${id}`, data, getAuthHeader());
-        await get().fetchMenu(true);
+        try {
+          await axios.put(`/api/admin/products/${id}`, data, getAuthHeader());
+          await get().fetchMenu(true);
+        } catch (error) {
+          handleAdminError(error);
+        }
       },
+
       deleteProduct: async (id) => {
-        await axios.delete(`/api/admin/products/${id}`, getAuthHeader());
-        await get().fetchMenu(true);
+        try {
+          await axios.delete(`/api/admin/products/${id}`, getAuthHeader());
+          await get().fetchMenu(true);
+        } catch (error) {
+          handleAdminError(error);
+        }
       },
+
       reorder: async (type, items) => {
-        await axios.post('/api/admin/reorder', { type, items }, getAuthHeader());
-        await get().fetchMenu(true);
+        try {
+          await axios.post(
+            "/api/admin/reorder",
+            { type, items },
+            getAuthHeader()
+          );
+          await get().fetchMenu(true);
+        } catch (error) {
+          handleAdminError(error);
+        }
       },
     }),
     {
-      name: 'fajka-menu-storage',
-      partialize: (state) => ({ menu: state.menu, lastFetched: state.lastFetched }),
+      name: "fajka-menu-storage",
+      partialize: (state) => ({
+        menu: state.menu,
+        lastFetched: state.lastFetched,
+      }),
     }
   )
 );

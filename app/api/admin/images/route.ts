@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
+import { requireAdmin } from "@/lib/auth";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -7,7 +8,10 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authError = requireAdmin(request);
+  if (authError) return authError;
+
   try {
     const result = await cloudinary.search
       .expression("folder:fajka-bar")
@@ -24,11 +28,18 @@ export async function GET() {
     return NextResponse.json(images);
   } catch (error) {
     console.error("Cloudinary gallery error:", error);
-    return NextResponse.json([], { status: 200 });
+
+    return NextResponse.json(
+      { error: "Image gallery could not be loaded" },
+      { status: 500 }
+    );
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const authError = requireAdmin(request);
+  if (authError) return authError;
+
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
@@ -62,6 +73,7 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Cloudinary upload error:", error);
+
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
 }

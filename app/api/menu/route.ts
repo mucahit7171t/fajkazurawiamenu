@@ -1,80 +1,100 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
-import Product from "@/lib/models/Product";
 import Category from "@/lib/models/Category";
+import Product from "@/lib/models/Product";
+import Subcategory from "@/lib/models/Subcategory";
 
-export const revalidate = 60;
-
-function toStr(value: any) {
-  if (!value) return "";
-  if (typeof value === "string") return value;
-  if (value._id) return String(value._id);
-  return String(value);
-}
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
     await connectDB();
 
-    const categories = await Category.find()
-      .sort({ order: 1, createdAt: 1 })
-      .lean();
+    const [categories, subcategories, products] = await Promise.all([
+      Category.find().sort({ order: 1, createdAt: 1 }).lean(),
+      Subcategory.find().sort({ order: 1, createdAt: 1 }).lean(),
+      Product.find({ isActive: { $ne: false } })
+        .sort({ order: 1, createdAt: -1 })
+        .lean(),
+    ]);
 
-    const products = await Product.find()
-      .sort({ order: 1, createdAt: -1 })
-      .lean();
+    const menu = (categories as any[]).map((cat) => {
+      const categoryId = String(cat._id);
 
-    const menu = categories.map((cat: any) => {
-      const catMongoId = String(cat._id);
-      const catAnchorId = cat.anchorId || catMongoId;
+      const categoryProducts = (products as any[]).filter((product) => {
+        const productCategory = product.categoryId || product.category || "";
 
-      const title = {
-        pl: cat.title?.pl || cat.title?.en || "",
-        en: cat.title?.en || cat.title?.pl || "",
-      };
+        return (
+          productCategory === cat.anchorId ||
+          productCategory === categoryId
+        );
+      });
 
-      const items = products
-        .filter((p: any) => {
-          const productCategoryId = toStr(p.categoryId);
-          const productCategory = toStr(p.category);
+      const categorySubcategories = (subcategories as any[])
+        .filter((sub) => String(sub.category) === categoryId)
+        .map((sub) => {
+          const subcategoryId = String(sub._id);
 
-          return (
-            productCategoryId === catMongoId ||
-            productCategoryId === catAnchorId ||
-            productCategory === catMongoId ||
-            productCategory === catAnchorId
-          );
-        })
-        .map((p: any) => ({
-          name: {
-            pl: p.name?.pl || p.name?.en || "",
-            en: p.name?.en || p.name?.pl || "",
-          },
-          description: {
-            pl: p.desc?.pl || p.desc?.en || "",
-            en: p.desc?.en || p.desc?.pl || "",
-          },
-          price: p.price || "",
-          prices: Array.isArray(p.prices) ? p.prices : [],
-          badge: p.badge || undefined,
-          image: p.image || "",
-        }));
+          return {
+            id: subcategoryId,
+            _id: subcategoryId,
+            title: sub.title,
+            category: categoryId,
+            order: sub.order || 0,
+            items: categoryProducts
+              .filter(
+                (product) => String(product.subcategory || "") === subcategoryId
+              )
+              .map((product) => ({
+                id: String(product._id),
+                _id: String(product._id),
+                name: product.name,
+                desc: product.desc,
+                description: product.desc,
+                price: product.price || "",
+                prices: product.prices || [],
+                image: product.image || "",
+                badge: product.badge || "",
+                order: product.order || 0,
+                subcategory: product.subcategory || "",
+              })),
+          };
+        });
+
+      const items = categoryProducts.map((product) => ({
+        id: String(product._id),
+        _id: String(product._id),
+        name: product.name,
+        desc: product.desc,
+        description: product.desc,
+        price: product.price || "",
+        prices: product.prices || [],
+        image: product.image || "",
+        badge: product.badge || "",
+        order: product.order || 0,
+        subcategory: product.subcategory || "",
+      }));
 
       return {
-        id: catAnchorId,
-        title,
-        imageLabel: {
-          pl: title.pl.toUpperCase(),
-          en: title.en.toUpperCase(),
-        },
-        image: cat.image || "/product-default.jpg",
+        id: categoryId,
+        _id: categoryId,
+        title: cat.title,
+        imageLabel: cat.title,
+        anchorId: cat.anchorId,
+        image: cat.image || "",
+        order: cat.order || 0,
+        subcategories: categorySubcategories,
         items,
       };
     });
 
     return NextResponse.json(menu);
   } catch (error) {
-    console.error("GET MENU ERROR:", error);
-    return NextResponse.json([]);
+    console.error("GET PUBLIC MENU ERROR:", error);
+
+    return NextResponse.json(
+      { error: "Menu could not be fetched" },
+      { status: 500 }
+    );
   }
 }

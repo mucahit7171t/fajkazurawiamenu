@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Image as ImageIcon, Loader2, RefreshCw, Search } from "lucide-react";
 import axios from "axios";
+import { useAuthStore } from "@/store/authStore";
 
 interface ImagePickerModalProps {
   isOpen: boolean;
@@ -21,12 +22,23 @@ export default function ImagePickerModal({
   const [images, setImages] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const token = useAuthStore((state) => state.token);
 
   const loadImages = async () => {
+    if (!token) {
+      setImages([]);
+      alert("Your admin session expired. Please log in again.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const res = await axios.get("/api/admin/images");
+      const res = await axios.get("/api/admin/images", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (Array.isArray(res.data)) {
         setImages(res.data);
@@ -126,7 +138,10 @@ export default function ImagePickerModal({
             <div className="custom-scrollbar flex-1 overflow-y-auto p-5 md:p-8">
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-24 text-white/30">
-                  <Loader2 className="mb-4 animate-spin text-[#c8a24a]" size={40} />
+                  <Loader2
+                    className="mb-4 animate-spin text-[#c8a24a]"
+                    size={40}
+                  />
                   <p className="text-[10px] font-black uppercase tracking-widest">
                     Loading images...
                   </p>
