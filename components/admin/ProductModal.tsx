@@ -15,6 +15,20 @@ interface ProductModalProps {
   title: string;
 }
 
+type PriceOption = {
+  label: string;
+  value: string;
+};
+
+const normalizePrices = (prices: any): PriceOption[] => {
+  if (!Array.isArray(prices)) return [];
+
+  return prices.map((item) => ({
+    label: String(item?.label || "").trim(),
+    value: String(item?.value || "").trim(),
+  }));
+};
+
 export default function ProductModal({
   isOpen,
   onClose,
@@ -28,7 +42,7 @@ export default function ProductModal({
     desc: { pl: "", en: "" },
     price: "",
     badge: "",
-    prices: [] as { label: string; value: string }[],
+    prices: [] as PriceOption[],
     image: "",
     category: "",
     subcategory: "",
@@ -46,7 +60,7 @@ export default function ProductModal({
         desc: initialData.desc || { pl: "", en: "" },
         price: initialData.price || "",
         badge: initialData.badge || "",
-        prices: initialData.prices || [],
+        prices: normalizePrices(initialData.prices),
         image: initialData.image || "",
         category:
           initialData.category?._id ||
@@ -89,14 +103,23 @@ export default function ProductModal({
     setLoading(true);
 
     try {
+      const cleanedPrices = formData.prices
+        .map((item) => ({
+          label: String(item.label || "").trim(),
+          value: String(item.value || "").trim(),
+        }))
+        .filter((item) => item.label || item.value);
+
       const dataToSave: any = {
         ...formData,
+        prices: cleanedPrices,
         categoryId: formData.category,
+        category: formData.category,
+        subcategory: formData.subcategory || "",
+        badge: formData.badge || "",
       };
 
-      if (!dataToSave.subcategory) delete dataToSave.subcategory;
       if (!dataToSave.price) delete dataToSave.price;
-      dataToSave.badge = formData.badge || "";
 
       await onSave(dataToSave);
       onClose();
@@ -108,17 +131,17 @@ export default function ProductModal({
   };
 
   const addPriceOption = () => {
-    setFormData({
-      ...formData,
-      prices: [...formData.prices, { label: "", value: "" }],
-    });
+    setFormData((prev) => ({
+      ...prev,
+      prices: [...prev.prices, { label: "", value: "" }],
+    }));
   };
 
   const removePriceOption = (index: number) => {
-    setFormData({
-      ...formData,
-      prices: formData.prices.filter((_, i) => i !== index),
-    });
+    setFormData((prev) => ({
+      ...prev,
+      prices: prev.prices.filter((_, i) => i !== index),
+    }));
   };
 
   const updatePriceOption = (
@@ -126,9 +149,16 @@ export default function ProductModal({
     field: "label" | "value",
     value: string
   ) => {
-    const newPrices = [...formData.prices];
-    newPrices[index][field] = value;
-    setFormData({ ...formData, prices: newPrices });
+    setFormData((prev) => {
+      const newPrices = prev.prices.map((item, i) =>
+        i === index ? { ...item, [field]: value } : item
+      );
+
+      return {
+        ...prev,
+        prices: newPrices,
+      };
+    });
   };
 
   return (

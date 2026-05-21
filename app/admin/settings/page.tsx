@@ -2,7 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Save, Loader2, Phone, Globe, Plus, Trash2 } from "lucide-react";
+import {
+  Save,
+  Loader2,
+  Phone,
+  Globe,
+  Plus,
+  Trash2,
+  Clock,
+} from "lucide-react";
 import { useSettingsStore } from "@/store/settingsStore";
 import toast from "react-hot-toast";
 
@@ -13,10 +21,43 @@ type Notice = {
   isActive: boolean;
 };
 
+type OpeningHours = {
+  monday: string;
+  tuesday: string;
+  wednesday: string;
+  thursday: string;
+  friday: string;
+  saturday: string;
+  sunday: string;
+};
+
+const defaultOpeningHours: OpeningHours = {
+  monday: "04:00 PM - 03:00 AM",
+  tuesday: "04:00 PM - 03:00 AM",
+  wednesday: "04:00 PM - 04:00 AM",
+  thursday: "04:00 PM - 04:00 AM",
+  friday: "02:00 PM - 05:00 AM",
+  saturday: "02:00 PM - 05:00 AM",
+  sunday: "03:00 PM - 04:00 AM",
+};
+
+const days: { key: keyof OpeningHours; label: string }[] = [
+  { key: "monday", label: "Monday" },
+  { key: "tuesday", label: "Tuesday" },
+  { key: "wednesday", label: "Wednesday" },
+  { key: "thursday", label: "Thursday" },
+  { key: "friday", label: "Friday" },
+  { key: "saturday", label: "Saturday" },
+  { key: "sunday", label: "Sunday" },
+];
+
 export default function SettingsPage() {
-  const { settings, loading, fetchSettings, updateSetting } = useSettingsStore();
+  const { settings, loading, fetchSettings, updateSetting } =
+    useSettingsStore();
 
   const [phone, setPhone] = useState("");
+  const [openingHours, setOpeningHours] =
+    useState<OpeningHours>(defaultOpeningHours);
   const [notices, setNotices] = useState<Notice[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -26,6 +67,11 @@ export default function SettingsPage() {
 
   useEffect(() => {
     setPhone(settings.phone || "+48 000 000 000");
+
+    setOpeningHours({
+      ...defaultOpeningHours,
+      ...(settings.openingHours || {}),
+    });
 
     if (Array.isArray(settings.notices)) {
       setNotices(
@@ -69,6 +115,13 @@ export default function SettingsPage() {
     setNotices(updated);
   };
 
+  const updateOpeningHour = (key: keyof OpeningHours, value: string) => {
+    setOpeningHours((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -82,6 +135,7 @@ export default function SettingsPage() {
       }));
 
       await updateSetting("phone", phone);
+      await updateSetting("openingHours", openingHours);
       await updateSetting("notices", normalizedNotices);
 
       toast.success("Settings updated successfully", { id: loadingToast });
@@ -140,6 +194,44 @@ export default function SettingsPage() {
                 placeholder="+48 000 000 000"
                 className="w-full bg-white/5 border border-white/5 rounded-2xl py-6 px-8 text-lg font-serif italic text-white focus:border-[#c8a24a] transition-all outline-none"
               />
+            </div>
+
+            <div className="h-px bg-white/5 w-full" />
+
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-[#c8a24a]/10 flex items-center justify-center text-[#c8a24a] border border-[#c8a24a]/20">
+                  <Clock size={20} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white uppercase tracking-tight">
+                    Opening Hours
+                  </h3>
+                  <p className="text-[10px] text-white/20 uppercase font-black tracking-widest mt-0.5">
+                    Displayed in the customer menu contact section
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {days.map((day) => (
+                  <div key={day.key} className="space-y-2">
+                    <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-white/40">
+                      {day.label}
+                    </label>
+
+                    <input
+                      type="text"
+                      value={openingHours[day.key]}
+                      onChange={(e) =>
+                        updateOpeningHour(day.key, e.target.value)
+                      }
+                      placeholder="04:00 PM - 03:00 AM"
+                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-6 py-4 font-bold text-white transition-all focus:border-[#c8a24a]/50 focus:outline-none"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="h-px bg-white/5 w-full" />

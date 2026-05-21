@@ -34,9 +34,28 @@ type Notice = {
   isActive: boolean;
 };
 
+type OpeningHours = {
+  monday: string;
+  tuesday: string;
+  wednesday: string;
+  thursday: string;
+  friday: string;
+  saturday: string;
+  sunday: string;
+};
+
 export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [notices, setNotices] = useState<Notice[]>([]);
+  const [openingHours, setOpeningHours] = useState<OpeningHours>({
+    monday: "04:00 PM - 03:00 AM",
+    tuesday: "04:00 PM - 03:00 AM",
+    wednesday: "04:00 PM - 04:00 AM",
+    thursday: "04:00 PM - 04:00 AM",
+    friday: "02:00 PM - 05:00 AM",
+    saturday: "02:00 PM - 05:00 AM",
+    sunday: "03:00 PM - 04:00 AM",
+  });
   const [lang, setLang] = useState<Lang>("pl");
 
   const getText = (value: LocalizedText) => {
@@ -95,6 +114,13 @@ export default function Home() {
               .sort((a: Notice, b: Notice) => a.order - b.order)
           );
         }
+
+        if (data.openingHours) {
+          setOpeningHours((prev) => ({
+            ...prev,
+            ...data.openingHours,
+          }));
+        }
       } catch (error) {
         console.error("SETTINGS LOAD ERROR:", error);
         setNotices([]);
@@ -106,14 +132,14 @@ export default function Home() {
 
   const defaultProductImage = "/product-default.jpg";
 
-  const openingHours = [
-    { day: "Monday", label: "04:00 PM - 03:00 AM" },
-    { day: "Tuesday", label: "04:00 PM - 03:00 AM" },
-    { day: "Wednesday", label: "04:00 PM - 04:00 AM" },
-    { day: "Thursday", label: "04:00 PM - 04:00 AM" },
-    { day: "Friday", label: "02:00 PM - 05:00 AM" },
-    { day: "Saturday", label: "02:00 PM - 05:00 AM" },
-    { day: "Sunday", label: "03:00 PM - 04:00 AM" },
+  const openingHoursList = [
+    { day: "Monday", label: openingHours.monday },
+    { day: "Tuesday", label: openingHours.tuesday },
+    { day: "Wednesday", label: openingHours.wednesday },
+    { day: "Thursday", label: openingHours.thursday },
+    { day: "Friday", label: openingHours.friday },
+    { day: "Saturday", label: openingHours.saturday },
+    { day: "Sunday", label: openingHours.sunday },
   ];
 
   return (
@@ -332,11 +358,7 @@ export default function Home() {
                         {item.prices && item.prices.length > 0 ? (
                           <div className="space-y-1">
                             {item.price && (
-                              <div className="flex items-center justify-between gap-3">
-                                <span className="whitespace-nowrap text-[13px] font-bold text-black/75">
-                                  1 shot
-                                </span>
-
+                              <div className="flex items-center justify-end gap-3">
                                 <span
                                   className="whitespace-nowrap text-[18px] font-bold text-[#ff6d6d]"
                                   style={{ fontFamily: "Georgia, serif" }}
@@ -421,7 +443,7 @@ export default function Home() {
               </h3>
 
               <div className="space-y-2">
-                {openingHours.map((item) => (
+                {openingHoursList.map((item) => (
                   <div
                     key={item.day}
                     className="flex items-center justify-between rounded-[12px] border border-black/10 bg-white/80 px-4 py-3 shadow-sm"
