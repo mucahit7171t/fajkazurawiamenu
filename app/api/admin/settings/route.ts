@@ -11,34 +11,15 @@ const defaultSettings = {
   isOpen: true,
   phone: "+48 000 000 000",
   openingHours: {
-    monday: "12:00 - 02:00",
-    tuesday: "12:00 - 02:00",
-    wednesday: "12:00 - 02:00",
-    thursday: "12:00 - 02:00",
-    friday: "12:00 - 04:00",
-    saturday: "12:00 - 04:00",
-    sunday: "12:00 - 02:00",
+    monday: "04:00 PM - 03:00 AM",
+    tuesday: "04:00 PM - 03:00 AM",
+    wednesday: "04:00 PM - 04:00 AM",
+    thursday: "04:00 PM - 04:00 AM",
+    friday: "02:00 PM - 05:00 AM",
+    saturday: "02:00 PM - 05:00 AM",
+    sunday: "03:00 PM - 04:00 AM",
   },
-  notices: [
-    {
-      icon: "👥",
-      text: "Powyżej 3 osób shisha jest sprzedawana tylko przy zakupie napojów.",
-      order: 0,
-      isActive: true,
-    },
-    {
-      icon: "🥤",
-      text: "Prosimy nie spożywać napojów i jedzenia przyniesionego z zewnątrz.",
-      order: 1,
-      isActive: true,
-    },
-    {
-      icon: "🛋️",
-      text: "Za uszkodzenia fajek wodnych, kanap i innych mebli spowodowane nieostrożnym zachowaniem odpowiadają nasi klienci.",
-      order: 2,
-      isActive: true,
-    },
-  ],
+  notices: [],
 };
 
 export async function PUT(req: NextRequest) {

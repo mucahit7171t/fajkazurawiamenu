@@ -16,7 +16,10 @@ import toast from "react-hot-toast";
 
 type Notice = {
   icon: string;
-  text: string;
+  text: {
+    pl: string;
+    en: string;
+  };
   order: number;
   isActive: boolean;
 };
@@ -66,19 +69,28 @@ export default function SettingsPage() {
   }, [fetchSettings]);
 
   useEffect(() => {
-    setPhone(settings.phone || "+48 000 000 000");
+    setPhone(String(settings.phone || "+48 000 000 000"));
 
     setOpeningHours({
       ...defaultOpeningHours,
-      ...(settings.openingHours || {}),
+      ...((settings.openingHours as Partial<OpeningHours>) || {}),
     });
 
     if (Array.isArray(settings.notices)) {
       setNotices(
         settings.notices
-          .map((item: Notice, index: number) => ({
+          .map((item: any, index: number) => ({
             icon: item.icon || "ℹ️",
-            text: item.text || "",
+            text:
+              typeof item.text === "string"
+                ? {
+                    pl: item.text,
+                    en: "",
+                  }
+                : {
+                    pl: item.text?.pl || "",
+                    en: item.text?.en || "",
+                  },
             order: item.order ?? index,
             isActive: item.isActive !== false,
           }))
@@ -92,7 +104,10 @@ export default function SettingsPage() {
       ...notices,
       {
         icon: "ℹ️",
-        text: "",
+        text: {
+          pl: "",
+          en: "",
+        },
         order: notices.length,
         isActive: true,
       },
@@ -130,8 +145,13 @@ export default function SettingsPage() {
 
     try {
       const normalizedNotices = notices.map((item, index) => ({
-        ...item,
+        icon: item.icon || "ℹ️",
+        text: {
+          pl: item.text.pl || "",
+          en: item.text.en || "",
+        },
         order: index,
+        isActive: item.isActive !== false,
       }));
 
       await updateSetting("phone", phone);
@@ -274,14 +294,31 @@ export default function SettingsPage() {
                         className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white font-bold outline-none focus:border-[#c8a24a]/60"
                       />
 
-                      <textarea
-                        value={notice.text}
-                        onChange={(e) =>
-                          updateNotice(index, "text", e.target.value)
-                        }
-                        placeholder="Notice text..."
-                        className="min-h-[80px] resize-none rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white font-medium outline-none focus:border-[#c8a24a]/60"
-                      />
+                      <div className="grid grid-cols-1 gap-3">
+                        <textarea
+                          value={notice.text.pl}
+                          onChange={(e) =>
+                            updateNotice(index, "text", {
+                              ...notice.text,
+                              pl: e.target.value,
+                            })
+                          }
+                          placeholder="Notice text PL..."
+                          className="min-h-[80px] resize-none rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white font-medium outline-none focus:border-[#c8a24a]/60"
+                        />
+
+                        <textarea
+                          value={notice.text.en}
+                          onChange={(e) =>
+                            updateNotice(index, "text", {
+                              ...notice.text,
+                              en: e.target.value,
+                            })
+                          }
+                          placeholder="Notice text EN..."
+                          className="min-h-[80px] resize-none rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white font-medium outline-none focus:border-[#c8a24a]/60"
+                        />
+                      </div>
 
                       <button
                         type="button"

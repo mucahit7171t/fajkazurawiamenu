@@ -29,7 +29,7 @@ type Category = {
 
 type Notice = {
   icon: string;
-  text: string;
+  text: string | LocalizedText;
   order: number;
   isActive: boolean;
 };
@@ -62,22 +62,12 @@ export default function Home() {
     return value?.[lang] || value?.pl || value?.en || "";
   };
 
-  const noticeText = (text: string) => {
-    if (lang === "pl") return text;
-
-    if (text.includes("Powyżej 3 osób")) {
-      return "For groups of more than 3 people, shisha is sold only with the purchase of drinks.";
+  const noticeText = (text: string | LocalizedText) => {
+    if (typeof text === "string") {
+      return text;
     }
 
-    if (text.includes("nie spożywać")) {
-      return "Please do not consume drinks or food brought from outside.";
-    }
-
-    if (text.includes("Za uszkodzenia")) {
-      return "Customers are responsible for damage to water pipes, sofas, and other furniture caused by careless behavior.";
-    }
-
-    return text;
+    return text?.[lang] || text?.pl || text?.en || "";
   };
 
   useEffect(() => {
@@ -113,6 +103,8 @@ export default function Home() {
               .filter((item: Notice) => item.isActive !== false)
               .sort((a: Notice, b: Notice) => a.order - b.order)
           );
+        } else {
+          setNotices([]);
         }
 
         if (data.openingHours) {
@@ -192,38 +184,40 @@ export default function Home() {
 
             <div className="mx-auto mt-5 h-px w-40 bg-[#b89245]" />
 
-            <div className="mx-auto mt-6 max-w-[350px] rounded-[22px] border border-[#b89245]/45 bg-white/45 px-4 py-5 shadow-sm">
-              <div className="mb-4 flex items-center justify-center gap-3">
-                <span className="h-px w-14 bg-[#b89245]" />
-                <span className="text-[18px] font-bold tracking-[0.32em] text-[#b89245]">
-                  {lang === "pl" ? "UWAGA" : "NOTICE"}
-                </span>
-                <span className="h-px w-14 bg-[#b89245]" />
-              </div>
+            {notices.length > 0 && (
+              <div className="mx-auto mt-6 max-w-[350px] rounded-[22px] border border-[#b89245]/45 bg-white/45 px-4 py-5 shadow-sm">
+                <div className="mb-4 flex items-center justify-center gap-3">
+                  <span className="h-px w-14 bg-[#b89245]" />
+                  <span className="text-[18px] font-bold tracking-[0.32em] text-[#b89245]">
+                    {lang === "pl" ? "UWAGA" : "NOTICE"}
+                  </span>
+                  <span className="h-px w-14 bg-[#b89245]" />
+                </div>
 
-              <div className="space-y-4 text-left">
-                {notices.map((notice, index) => (
-                  <div key={index}>
-                    <div className="flex gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#b89245]/50 text-[18px] text-[#b89245]">
-                        {notice.icon}
+                <div className="space-y-4 text-left">
+                  {notices.map((notice, index) => (
+                    <div key={index}>
+                      <div className="flex gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#b89245]/50 text-[18px] text-[#b89245]">
+                          {notice.icon}
+                        </div>
+
+                        <p
+                          className="text-[14px] leading-5 text-black/80"
+                          style={{ fontFamily: "Georgia, serif" }}
+                        >
+                          {noticeText(notice.text)}
+                        </p>
                       </div>
 
-                      <p
-                        className="text-[14px] leading-5 text-black/80"
-                        style={{ fontFamily: "Georgia, serif" }}
-                      >
-                        {noticeText(notice.text)}
-                      </p>
+                      {index !== notices.length - 1 && (
+                        <div className="mt-4 h-px bg-[#b89245]/35" />
+                      )}
                     </div>
-
-                    {index !== notices.length - 1 && (
-                      <div className="mt-4 h-px bg-[#b89245]/35" />
-                    )}
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </section>
 
           <section className="sticky top-0 z-20 border-y border-black/10 bg-[#ececec]/95 px-3 py-2 backdrop-blur">
